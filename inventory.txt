@@ -1,0 +1,7 @@
+# Servidores Infra Infnet
+target1 ansible_host=192.168.79.141 ansible_user=root ansible_ssh_pass=password1982
+target2 ansible_host=192.168.79.142 ansible_user=root ansible_ssh_pass=password1982
+
+#Agrupamento
+[wordpressinfnet]
+target2
