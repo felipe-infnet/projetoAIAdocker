@@ -1,89 +1,25 @@
-- name: Instalacao WordPress CentOS Linux Docker
+- name: Deploy WordPress usando container
   hosts: docker
-  become: yes
-  vars:
-    mysql_root_password: "password1982"
-    wordpress_db_name: "infnetdb"
-    wordpress_db_user: "root"
-    wordpress_db_password: "password1982"
-    wordpress_db_host: "localhost"
+  become: true
+
   tasks:
-  - name: Instalar Docker
-    yum:
-      name: docker
-      state: present
-    notify:
-    - start Docker
-
-  - name: Start servico Docker
-    systemd:
-      name: docker
-      state: started
-      enabled: yes
-
-  - name: Instalar Docker Compose
-    get_url:
-      url: https://github.com/docker/compose/releases/download/1.29.1/docker-compose-Linux-x86_64
-      dest: /usr/local/bin/docker-compose
-      mode: 'a+x'
-
-  - name: Instalar packs
-    yum:
-      name:
-      - epel-release
-      - python3-pip
-      - python3-devel
-      - libffi-devel
-      - openssl-devel
-      - gcc
-      state: present
-
-  - name: Instalar docker python
-    pip:
-      name: docker
-      state: present
-
-  - name: Criar WordPress DB
-    mysql_db:
-      name: "{{ wordpress_db_name }}"
-      state: present
-      login_host: "{{ wordpress_db_host }}"
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
-
-  - name: Criar WordPress DB user
-    mysql_user:
-      name: "{{ wordpress_db_user }}"
-      password: "{{ wordpress_db_password }}"
-      priv: "{{ wordpress_db_name }}.*:ALL"
-      login_host: "{{ wordpress_db_host }}"
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
-      state: present
-
-  - name: Clone WordPress git repository
-    git:
-      repo: "https://github.com/WordPress/WordPress.git"
-      dest: "/var/www/wordpress"
-      version: "{{ wordpress_version }}"
-
-  - name: Configurando WordPress J2
-    template:
-      src: "wordpress-config.php.j2"
-      dest: "/var/www/wordpress/wp-config.php"
-      mode: "0644"
-
-  - name: Iniciando container WordPress
+    - name: Start MySQL container
       docker_container:
-      name: wordpress
-      image: wordpress:{{ wordpress_version }}
-      env:
-        WORDPRESS_DB_HOST: "{{ wordpress_db_host }}"
-        WORDPRESS_DB_NAME: "{{ wordpress_db_name }}"
-        WORDPRESS_DB_USER: "{{ wordpress_db_user }}"
-        WORDPRESS_DB_PASSWORD: "{{ wordpress_db_password }}"
-      ports:
-      - "80:80"
-      volumes:
-      - "/var/www/wordpress:/var/www/html"
-      restart_policy: always
+        name: mysql
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: password1982
+          MYSQL_DATABASE: wordpress
+          MYSQL_USER: wordpress
+          MYSQL_PASSWORD: password1982
+    - name: Start WordPress container
+      docker_container:
+        name: wordpress
+        image: wordpress:latest
+        env:
+          WORDPRESS_DB_HOST: mysql:3306
+          WORDPRESS_DB_NAME: wordpress
+          WORDPRESS_DB_USER: wordpress
+          WORDPRESS_DB_PASSWORD: password1982 
+        ports:
+          - "80:80"

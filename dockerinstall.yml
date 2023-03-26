@@ -1,0 +1,20 @@
+- name: Instalando Docker
+  hosts: docker
+  tasks:
+  - name: Adicionando repositorio Docker
+    yum_repository:
+      name: Docker
+      description: Docker Repo
+      baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+      gpgcheck: no
+  - name: Instalando Docker package
+    package:
+      name:  "docker-ce-18.09.1-3.el7.x86_64"
+      state: present
+  - name: Starting docker service
+    service:
+      name: "docker"
+      state: started
+      enabled: yes
+  - name: Docker SDK para Python3
+    command: pip3 install docker
